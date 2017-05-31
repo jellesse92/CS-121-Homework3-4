@@ -9,6 +9,7 @@ import time
 
 # Programmer Flags
 DEVELOPING = True
+INDEX_MAX = 5
 # Automatically Load Book-Keeping
 urldict = helperfiles.get_bookkeeping("WEBPAGES_CLEAN\\bookkeeping.tsv")
 # Dictionary Containing Index
@@ -44,7 +45,7 @@ def create_index(main_dir="WEBPAGES_CLEAN"):
 
         # Limit Number of Processes Running at a time to
         # stop cpu overload. Could Pool as an alternative.
-        if len(indexing) >= 5:
+        if len(indexing) >= INDEX_MAX:
             # Avoid Join Time-Out cause by over-full Queue()
             yield_queue_values(directory, indexing, index_queue, frequency_queue)
             indexing = []
