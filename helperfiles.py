@@ -11,9 +11,9 @@ def get_tfidf(indexdict, df, n):
     for term, value in indexdict.items():
         for pair in value:
             if len(pair) == 2:
-                tfidf[term].append((pair[0], calculate_tfidf(pair[1], n / len(tfidf[term]))))
+                tfidf[term].append((pair[0], calculate_tfidf(pair[1], n / len(indexdict[term]))))
             else:
-                pair = (pair[0], calculate_tfidf(pair[1], n / len(tfidf[term])), pair[2])
+                tfidf[term].append((pair[0], calculate_tfidf(pair[1], n / len(indexdict[term]))))
         try:
             write_row_db(str(term), tfidf[term])
         except Exception as e:

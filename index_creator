@@ -67,7 +67,7 @@ def process_directory(collection, directory, termfreq, indexqueue, filecount):
         page = collection + "\\" + doc
         pagefile = iopen(page, 'r', encoding="utf8")
         html = BeautifulSoup(pagefile, 'html.parser')
-        unique_tokens = important_words(html, unique_tokens)+
+        unique_tokens = important_words(html, unique_tokens)
         tokens = helperfiles.get_tokens(html.get_text())
         for token, value in tokens.items():
             termfreq.put(token)
