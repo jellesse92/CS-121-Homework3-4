@@ -15,9 +15,9 @@ def get_tfidf(indexdict, df, n):
             else:
                 tfidf[term].append((pair[0], calculate_tfidf(pair[1], n / len(indexdict[term]))))
         try:
-            write_row_db(str(term), tfidf[term])
+            write_row_db([str(term), tfidf[term]])
         except Exception as e:
-            errors.append( "Failed to write entry for Term: " + str(term) + "And Value" + str(value) + e.reason)
+            errors.append( "Failed to write entry for Term: " + str(term) + "And Value" + str(value))
             print (errors[-1])
     return tfidf, errors
 
