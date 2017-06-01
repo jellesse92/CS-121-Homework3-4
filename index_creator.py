@@ -14,10 +14,8 @@ INDEX_MAX = 5
 urldict = helperfiles.get_bookkeeping("WEBPAGES_CLEAN\\bookkeeping.tsv")
 # Dictionary Containing Index
 indexdict = defaultdict(list)  # key = term , value = (file, tf-idf) files its in
-# Term Frequency Counter
-df = Counter()
 # File Counter
-filecount = Value('i', 0)
+filecount = len(urldict)
 
 
 def debug_log(logtext: 'str', to_console = False)->None:
@@ -39,16 +37,15 @@ def create_index(main_dir="WEBPAGES_CLEAN"):
     directories = [subdir[0] for subdir in os.walk(main_dir)]
     directory_processor = Pool()
     indexing = directory_processor.map(process_directory, directories[1:])
-    debug_log("Combining Indexes")
+    debug_log("Combining Indexes", True)
     for x in range(len(indexing)):
-        df.update(indexing[x][1])
         for token in indexing[x][0]:
             indexdict[token[0]].append(token[1:])
     del indexing
     del directories
 
     # Get TFIDF And print any errors found while processing
-    debug_log("Printing TF-IDF to files.")
+    debug_log("Printing TF-IDF to files.", True)
     indexdict, errors = helperfiles.get_tfidf(indexdict, df, filecount.value)
     print_stats(errors)
     debug_log("Done", True)
@@ -69,14 +66,12 @@ def process_directory(collection):
         unique_tokens = important_words(html, unique_tokens)
         tokens = helperfiles.get_tokens(html.get_text())
         for token, value in tokens.items():
-            frequencies.append(token)
             token_value = (token, directory + '/' + doc, value);
             if token in unique_tokens:
                 token_value += (unique_tokens[token],)
             indexes.append(token_value)
     debug_log("Finished Process for Collection " + str(directory))
-    return indexes, frequencies
-
+    return indexes
 
 def important_words(soup, unique_words):
     if soup.find('b') is not None:
@@ -104,7 +99,7 @@ def important_words(soup, unique_words):
 
 def print_stats(errors):
     out = open("stats.txt", "w")
-    out.write(u"Unique Files Found: " + str(filecount.value) + u"\n")
+    out.write(u"Unique Files Found: " + str(filecount) + u"\n")
     out.write(u"Unique Words Found: " + str(len(indexdict)) + u"\n")
     out.write(u"Errors" + str(errors))
     out.close()
