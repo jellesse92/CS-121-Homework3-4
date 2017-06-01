@@ -26,11 +26,10 @@ def debug_log(logtext: 'str', to_console = False)->None:
 
 def create_index(main_dir="WEBPAGES_CLEAN"):
 
-    global filecount, indexdict, df
+    global filecount, indexdict
     start_time = time.time()
     # Queues for MultiProcessing Data Gathering
     m = Manager()
-    frequency_queue = m.Queue()
     index_queue = Queue()
     indexing = []
 
@@ -59,7 +58,6 @@ def process_directory(collection):
     debug_log("Starting Processing for Collection " + str(directory))
     unique_tokens = defaultdict(list)
     for doc in os.listdir(collection):
-        filecount.value += 1
         page = collection + "\\" + doc
         pagefile = iopen(page, 'r', encoding="utf8")
         html = BeautifulSoup(pagefile, 'html.parser')
