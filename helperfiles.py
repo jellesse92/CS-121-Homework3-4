@@ -9,7 +9,7 @@ import ast
 #DATABASE MODE VS Print to File
 DB_MODE = True
 
-def get_tfidf(indexdict, df, n):
+def get_tfidf(indexdict, n):
     tfidf = defaultdict(list)
     errors = []
     if DB_MODE:

@@ -45,7 +45,7 @@ def create_index(main_dir="WEBPAGES_CLEAN"):
 
     # Get TFIDF And print any errors found while processing
     debug_log("Printing TF-IDF to files.", True)
-    indexdict, errors = helperfiles.get_tfidf(indexdict, df, filecount.value)
+    indexdict, errors = helperfiles.get_tfidf(indexdict, filecount.value)
     print_stats(errors)
     debug_log("Done", True)
     debug_log("Elapsed Time: " + str(time.time() - start_time), True)
