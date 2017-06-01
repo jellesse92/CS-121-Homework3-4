@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 import time
 
 # Programmer Flags
+helperfiles.DB_MODE = True
 DEVELOPING = False
 INDEX_MAX = 5
 # Automatically Load Book-Keeping
