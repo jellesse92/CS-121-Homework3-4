@@ -16,19 +16,21 @@ def get_tfidf(indexdict, n):
         dbconnector.build_connection()
     for term, value in indexdict.items():
         for pair in value:
-            if len(pair) == 2:
-                tfidf[term].append((pair[0], calculate_tfidf(pair[1], n / len(indexdict[term]))))
-            else:
-                tfidf[term].append((pair[0], calculate_tfidf(pair[1], n / len(indexdict[term]))))
+            tf_idf = calculate_tfidf(pair[1], n / len(indexdict[term]))
+            ranking = rank_important_words(tf_idf, pair[2])
+            tfidf[term].append((pair[0], float(round(ranking, 2, )), str(pair[2]), str(pair[3])))
         try:
-            if DB_MODE:
-                dbconnector.insert_data(str(term), str(tfidf[term]))
-            else:
+            if not DB_MODE:
                 write_row_db(str(term), tfidf[term])
+            else:
+                dbconnector.insert_data(term, str(tfidf[term]))
         except Exception as e:
             errors.append( "Failed to write entry for Term: " + str(term) + "And Value" + str(value))
             print (errors[-1])
+
     if DB_MODE:
+        # dbconnector.build_connection()
+        # dbconnector.insert_all_data(tfidf)
         dbconnector.close_connection()
     return tfidf, errors
 
@@ -43,6 +45,26 @@ def calculate_tfidf(tf, idf):
     finally:
         return retval
 
+
+def rank_important_words(calculation, imp_list):
+    """This function is called in TfidfDict()
+        tfidf values are given additional ranking if they contain tags
+        t = 1.5 (b, h1, h2, h3) = 1.7
+
+        if a word contains title, h1, and h2 then tfidf * (1.5, 1.7, 1.7)
+        """
+    additional_ranking = 0
+    if 't' in imp_list:
+        additional_ranking += 1.5
+    if 'b' in imp_list:
+        additional_ranking += 1.7
+    if 'h1' in imp_list:
+        additional_ranking += 1.7
+    if 'h2' in imp_list:
+        additional_ranking += 1.7
+    if additional_ranking > 0:
+        calculation = calculation * additional_ranking
+    return calculation
 
 
 def get_bookkeeping(filename):

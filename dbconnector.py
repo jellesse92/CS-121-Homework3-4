@@ -9,7 +9,8 @@ def build_connection() -> 'mysql connection':
     global cnx, cursor
     #Set user and password to your MySQL credentials
     cnx = mysql.connector.connect(user='root', password='password', database='cs121')
-    cursor = cnx.cursor()
+    cursor = cnx.cursor(buffered=True)
+
 
 
 def close_connection() -> None:
@@ -20,11 +21,20 @@ def close_connection() -> None:
 
 
 def insert_data(term, locations) -> bool:
-    # receives data as:
+    # receives data as:3
     # token, [(0//1, 1), (0//2, 1, b) ] etc
     data_obj = {'term': term, 'locations': locations}
-    data_str = "INSERT INTO web_index (term, locations) VALUES (%(term)s, %(locations)s) ON DUPLICATE KEY UPDATE locations = %(locations)s "
+    data_str = "INSERT INTO web_index (term, locations) VALUES (%(term)s, %(locations)s) ON DUPLICATE KEY UPDATE locations = %(locations)s"
     cursor.execute(data_str, data_obj)
+    cnx.commit()
+    return cursor.lastrowid is not None
+
+
+def insert_all_data(data_dict) -> bool:
+    # recieves data as dict "[('0//1', tf-idf, [attr...]),"]
+    data_str = "INSERT INTO web_index (term, locations) VALUES (%(term)s, %(loc)s) ON DUPLICATE KEY UPDATE locations = '%(rep)s' "
+    data_obj = [{ 'term': str(key), 'loc': str(value), 'rep': str(value) } for key, value in data_dict.items()]
+    cursor.executemany(data_str, data_obj)
     return cursor.lastrowid is not None
 
 

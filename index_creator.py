@@ -3,14 +3,17 @@ from multiprocessing import Process, Value, Manager, Queue, Pool
 import helperfiles
 from collections import defaultdict, Counter
 import os
+import re
 from io import open as iopen
 from bs4 import BeautifulSoup
 import time
 
+
+
 # Programmer Flags
 helperfiles.DB_MODE = True
 DEVELOPING = False
-INDEX_MAX = 5
+INDEX_MAX = None
 # Automatically Load Book-Keeping
 urldict = helperfiles.get_bookkeeping("WEBPAGES_CLEAN\\bookkeeping.tsv")
 # Dictionary Containing Index
@@ -26,7 +29,7 @@ def debug_log(logtext: 'str', to_console = False)->None:
 
 
 def create_index(main_dir="WEBPAGES_CLEAN"):
-
+    debug_log("Started", True)
     global filecount, indexdict
     start_time = time.time()
     # Queues for MultiProcessing Data Gathering
@@ -35,8 +38,9 @@ def create_index(main_dir="WEBPAGES_CLEAN"):
     indexing = []
 
     directories = [subdir[0] for subdir in os.walk(main_dir)]
-    directory_processor = Pool()
-    indexing = directory_processor.map(process_directory, directories[1:])
+    directory_processor = Pool(INDEX_MAX)
+    debug_log("indexing")
+    indexing = directory_processor.map(process_directory, directories[1:2])
     debug_log("Combining Indexes", True)
     for x in range(len(indexing)):
         for token in indexing[x]:
@@ -65,14 +69,21 @@ def process_directory(collection):
         unique_tokens = important_words(html, unique_tokens)
         tokens = helperfiles.get_tokens(html.get_text())
         for token, value in tokens.items():
-            token_value = (token, directory + '/' + doc, value);
-            if token in unique_tokens:
-                token_value += (unique_tokens[token],)
+            insert_position = [w.start() for w in re.finditer(token, html.get_text())]
+            token_value = (token, directory + '/' + doc, value, unique_tokens[token], insert_position);
             indexes.append(token_value)
     debug_log("Finished Process for Collection " + str(directory))
     return indexes
 
+
 def important_words(soup, unique_words):
+    titles = soup.find('body')
+    if titles is not None:
+        titles = titles.findAll(text=True, recursive=True)
+    if titles is not None and len(titles) > 1:
+        token = helperfiles.get_tokens(titles[0])
+        for w in token:
+            unique_words[w].append("t")
     if soup.find('b') is not None:
         txt = soup.find('b').text
         token = helperfiles.get_tokens(txt)
