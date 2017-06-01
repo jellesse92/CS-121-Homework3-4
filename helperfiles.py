@@ -22,7 +22,7 @@ def get_tfidf(indexdict, n):
                 tfidf[term].append((pair[0], calculate_tfidf(pair[1], n / len(indexdict[term]))))
         try:
             if DB_MODE:
-                dbconnector.insert_data([str(term), tfidf[term]])
+                dbconnector.insert_data(str(term), str(tfidf[term]))
             else:
                 write_row_db(str(term), tfidf[term])
         except Exception as e:

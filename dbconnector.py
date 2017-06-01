@@ -23,7 +23,8 @@ def insert_data(term, locations) -> bool:
     # receives data as:
     # token, [(0//1, 1), (0//2, 1, b) ] etc
     data_obj = {'term': term, 'locations': locations}
-    data_str = "INSERT INTO web_index (term, locations) VALUES (%(term)s, %(locations)s) ON DUPLICTE KEY UPDATE locations = %(locations)s "
+    data_str = "INSERT INTO web_index (term, locations) VALUES (%(term)s, %(locations)s) ON DUPLICATE KEY UPDATE locations = %(locations)s "
+    print(data_str, data_obj)
     cursor.execute(data_str, data_obj)
     return cursor.lastrowid is not None
 
