@@ -47,7 +47,9 @@ def create_index(main_dir="WEBPAGES_CLEAN"):
         # stop cpu overload. Could Pool as an alternative.
         if len(indexing) >= INDEX_MAX:
             # Avoid Join Time-Out cause by over-full Queue()
-            yield_queue_values(directory, indexing, index_queue, frequency_queue)
+            for i in indexing:
+                if yield_queue_values(directory, i, index_queue, frequency_queue) == "DEAD":
+                    indexing.remove(i)
             indexing = []
     # One Final Yield to Ensure last of the data is fully dumped.
     yield_queue_values(directory, indexing, index_queue, frequency_queue)
@@ -79,18 +81,18 @@ def process_directory(collection, directory, termfreq, indexqueue, filecount):
     debug_log("Finished Process for Collection " + str(directory))
 
 
-def yield_queue_values(dir, indexing, index_queue, frequency_queue):
+def yield_queue_values(dir, i, index_queue, frequency_queue):
     debug_log("Yielding Data from Index up to Directory: " + str(dir))
-    for i in indexing:
-        while i.is_alive():
-            i.join(timeout = 1)
-            while True:
-                try:
-                    item = index_queue.get(block=False)
-                    indexdict[item[0]].append((item[1], item[2]))
-                    df[frequency_queue.get(block=False)] +=1
-                except Exception:
-                    break
+    while i.is_alive():
+        i.join(timeout = 1)
+        while True:
+            try:
+                item = index_queue.get(block=False)
+                indexdict[item[0]].append((item[1], item[2]))
+                df[frequency_queue.get(block=False)] +=1
+            except Exception:
+                break
+    return "DEAD"
 
 
 def important_words(soup, unique_words):

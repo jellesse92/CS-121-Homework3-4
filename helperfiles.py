@@ -3,11 +3,13 @@ from collections import defaultdict
 import csv
 import re
 import math
-
+import dbconnector
+import ast
 
 def get_tfidf(indexdict, df, n):
     tfidf = defaultdict(list)
     errors = []
+    dbconnector.build_connection()
     for term, value in indexdict.items():
         for pair in value:
             if len(pair) == 2:
@@ -15,10 +17,11 @@ def get_tfidf(indexdict, df, n):
             else:
                 tfidf[term].append((pair[0], calculate_tfidf(pair[1], n / len(indexdict[term]))))
         try:
-            write_row_db([str(term), tfidf[term]])
+            dbconnector.insert_data([str(term), tfidf[term]])
         except Exception as e:
             errors.append( "Failed to write entry for Term: " + str(term) + "And Value" + str(value))
             print (errors[-1])
+    dbconnector.close_connection()
     return tfidf, errors
 
 
@@ -51,5 +54,13 @@ def get_tokens(text):
         tokens[word] += 1
     return tokens
 
+
+def query_terms(*terms) -> str:
+    dbconnector.build_connection()
+    search_results = defaultdict(list)
+    for term in terms:
+        search_results[term] = ast.literal_eval(dbconnector.query_data(term))
+    return search_results
+    dbconnector.close_connection()
 
 
