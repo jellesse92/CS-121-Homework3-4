@@ -38,7 +38,7 @@ def create_index(main_dir="WEBPAGES_CLEAN"):
     indexing = directory_processor.map(process_directory, directories[1:])
     debug_log("Combining Indexes", True)
     for x in range(len(indexing)):
-        for token in indexing[x][0]:
+        for token in indexing[x]:
             indexdict[token[0]].append(token[1:])
     del indexing
     del directories
