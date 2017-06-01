@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from multiprocessing import Process, Value, Manager, Queue
+from multiprocessing import Process, Value, Manager, Queue, Pool
 import helperfiles
 from collections import defaultdict, Counter
 import os
@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 import time
 
 # Programmer Flags
-DEVELOPING = True
+DEVELOPING = False
 INDEX_MAX = 5
 # Automatically Load Book-Keeping
 urldict = helperfiles.get_bookkeeping("WEBPAGES_CLEAN\\bookkeeping.tsv")
@@ -31,29 +31,21 @@ def create_index(main_dir="WEBPAGES_CLEAN"):
     global filecount, indexdict, df
     start_time = time.time()
     # Queues for MultiProcessing Data Gathering
-    frequency_queue = Queue()
+    m = Manager()
+    frequency_queue = m.Queue()
     index_queue = Queue()
     indexing = []
 
-    for directory in os.listdir(main_dir):
-        collection =  main_dir + "\\" + directory
-        if os.path.isfile(collection):
-            continue # Skip if this file isnt a folder.
-        folder = Process(target=process_directory, args=(collection, directory, frequency_queue, index_queue, filecount))
-        indexing.append(folder)
-        folder.start()
-
-        # Limit Number of Processes Running at a time to
-        # stop cpu overload. Could Pool as an alternative.
-        if len(indexing) >= INDEX_MAX:
-            # Avoid Join Time-Out cause by over-full Queue()
-            for i in indexing:
-                if yield_queue_values(directory, i, index_queue, frequency_queue) == "DEAD":
-                    indexing.remove(i)
-            indexing = []
-    # One Final Yield to Ensure last of the data is fully dumped.
-    for i in indexing:
-        yield_queue_values(directory, indexing, index_queue, frequency_queue)
+    directories = [subdir[0] for subdir in os.walk(main_dir)]
+    directory_processor = Pool()
+    indexing = directory_processor.map(process_directory, directories[1:])
+    debug_log("Combining Indexes")
+    for x in range(len(indexing)):
+        df.update(indexing[x][1])
+        for token in indexing[x][0]:
+            indexdict[token[0]].append(token[1:])
+    del indexing
+    del directories
 
     # Get TFIDF And print any errors found while processing
     debug_log("Printing TF-IDF to files.")
@@ -63,7 +55,10 @@ def create_index(main_dir="WEBPAGES_CLEAN"):
     debug_log("Elapsed Time: " + str(time.time() - start_time), True)
 
 
-def process_directory(collection, directory, termfreq, indexqueue, filecount):
+def process_directory(collection):
+    indexes = []
+    frequencies = []
+    directory = collection.split("\\")[1]
     debug_log("Starting Processing for Collection " + str(directory))
     unique_tokens = defaultdict(list)
     for doc in os.listdir(collection):
@@ -74,26 +69,13 @@ def process_directory(collection, directory, termfreq, indexqueue, filecount):
         unique_tokens = important_words(html, unique_tokens)
         tokens = helperfiles.get_tokens(html.get_text())
         for token, value in tokens.items():
-            termfreq.put(token)
+            frequencies.append(token)
             token_value = (token, directory + '/' + doc, value);
             if token in unique_tokens:
                 token_value += (unique_tokens[token],)
-            indexqueue.put(token_value)
+            indexes.append(token_value)
     debug_log("Finished Process for Collection " + str(directory))
-
-
-def yield_queue_values(dir, i, index_queue, frequency_queue):
-    debug_log("Yielding Data from Index up to Directory: " + str(dir))
-    while i.is_alive():
-        i.join(timeout = 1)
-        while True:
-            try:
-                item = index_queue.get(block=False)
-                indexdict[item[0]].append((item[1], item[2]))
-                df[frequency_queue.get(block=False)] +=1
-            except Exception:
-                break
-    return "DEAD"
+    return indexes, frequencies
 
 
 def important_words(soup, unique_words):

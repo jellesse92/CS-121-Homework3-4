@@ -34,7 +34,15 @@ def get_tfidf(indexdict, df, n):
 
 
 def calculate_tfidf(tf, idf):
-    return (1 + math.log10(tf)) * math.log10(idf)
+    retval = 0
+    try:
+        retval = (1 + math.log10(tf)) * math.log10(idf)
+    except Exception as e:
+        print("Error Found")
+        retval = 0
+    finally:
+        return retval
+
 
 
 def get_bookkeeping(filename):
