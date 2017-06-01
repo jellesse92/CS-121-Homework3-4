@@ -5,12 +5,15 @@ cursor = None
 
 
 def build_connection() -> 'mysql connection':
+    #Must Always run first.
     global cnx, cursor
+    #Set user and password to your MySQL credentials
     cnx = mysql.connector.connect(user='root', password='password', database='cs121')
     cursor = cnx.cursor()
 
 
 def close_connection() -> None:
+    #Must ALWAYS close after running a query
     cnx.commit()
     cursor.close()
     cnx.close()

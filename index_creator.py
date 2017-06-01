@@ -52,7 +52,8 @@ def create_index(main_dir="WEBPAGES_CLEAN"):
                     indexing.remove(i)
             indexing = []
     # One Final Yield to Ensure last of the data is fully dumped.
-    yield_queue_values(directory, indexing, index_queue, frequency_queue)
+    for i in indexing:
+        yield_queue_values(directory, indexing, index_queue, frequency_queue)
 
     # Get TFIDF And print any errors found while processing
     debug_log("Printing TF-IDF to files.")
