@@ -5,11 +5,12 @@ import re
 import math
 import dbconnector
 import ast
+import io
 from multiprocessing import Pool
 
 #DATABASE MODE VS Print to File
 DB_MODE = True
-db_name = "database.tsv"
+db_name = "database.txt"
 
 #GLOBALS
 file_index = defaultdict(list)
@@ -23,7 +24,7 @@ def get_tfidf(indexdict, n):
             ranking = rank_important_words(tf_idf, pair[2])
             tfidf[term].append((pair[0], float(round(ranking, 2, ))))
     p = Pool()
-    p.map(write_row_db, [(key, val) for key, val in tfidf.items()])
+    p.map(write_row_db, [(key.encode('utf-8'), val) for key, val in tfidf.items()])
     if DB_MODE:
         dbconnector.insert_all_data(db_name)
     return tfidf, errors
@@ -72,7 +73,7 @@ def get_bookkeeping(filename):
 
 def write_row_db(index_values):
     #   Temporary  write to Database
-    outfile = open(db_name, "a+", encoding='utf8')
+    outfile = io.open(db_name, "a+", encoding='utf8')
     writer = csv.writer(outfile, delimiter='|',)
     writer.writerow(index_values)
     outfile.close()
@@ -97,7 +98,7 @@ def query_terms(*terms) -> str:
         dbconnector.close_connection()
     else:
         if file_index is None:
-            infile = open(db_name, 'r', encoding='utf-8')
+            infile = io.open(db_name, 'r', encoding='utf8')
             for line in infile.readlines():
                 data = line.split("|")
                 file_index[data[0]] = data[1]

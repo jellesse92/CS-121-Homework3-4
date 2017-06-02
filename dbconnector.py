@@ -8,7 +8,7 @@ def build_connection() -> 'mysql connection':
     #Must Always run first.
     global cnx, cursor
     #Set user and password to your MySQL credentials
-    cnx = mysql.connector.connect(user='root', password='password', database='cs121', use_unicode=True)
+    cnx = mysql.connector.connect(user='root', password='password', database='cs121', charset='utf8', use_unicode=True)
     cursor = cnx.cursor(buffered=True)
     cursor.execute('SET NAMES utf8mb4')
     cursor.execute("SET CHARACTER SET utf8mb4")
@@ -52,6 +52,15 @@ def query_data(term) -> list:
     cursor.execute(data_str, [term])
     ret = ast.literal_eval(cursor.fetchone()[0])
     close_connection()
+    return ret
+
+
+def query_urls(docids):
+    build_connection()
+    docidlist = something = ', '.join(["'" + str(d_id) + "'" for d_id in docids])
+    data_str = "select docid, url from bookkeeping where docid in (" + docidlist + ");"
+    cursor.execute(data_str)
+    ret = cursor.fetchall()
     return ret
 
 

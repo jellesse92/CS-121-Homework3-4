@@ -14,7 +14,7 @@ import time
 helperfiles.DB_MODE = True
 DEVELOPING = False
 INDEX_MAX = None
-
+MAX_DIRECTORIES = None
 # Automatically Load Book-Keeping
 urldict = helperfiles.get_bookkeeping("WEBPAGES_CLEAN\\bookkeeping.tsv")
 # Dictionary Containing Index
@@ -41,7 +41,7 @@ def create_index(main_dir="WEBPAGES_CLEAN"):
     directories = [subdir[0] for subdir in os.walk(main_dir)]
     directory_processor = Pool(INDEX_MAX)
     debug_log("indexing")
-    indexing = directory_processor.map(process_directory, directories[1:])
+    indexing = directory_processor.map(process_directory, directories[1:MAX_DIRECTORIES])
     debug_log("Combining Indexes", True)
     for x in range(len(indexing)):
         for token in indexing[x]:
@@ -65,7 +65,7 @@ def process_directory(collection):
     unique_tokens = defaultdict(list)
     for doc in os.listdir(collection):
         page = collection + "\\" + doc
-        pagefile = iopen(page, 'r', encoding="utf-8")
+        pagefile = iopen(page, 'r', encoding="utf-")
         html = BeautifulSoup(pagefile, 'html.parser')
         unique_tokens = important_words(html, unique_tokens)
         tokens = helperfiles.get_tokens(html.get_text())
