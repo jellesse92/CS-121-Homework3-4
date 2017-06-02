@@ -5,33 +5,26 @@ import re
 import math
 import dbconnector
 import ast
+from multiprocessing import Pool
 
 #DATABASE MODE VS Print to File
 DB_MODE = True
+db_name = "database.tsv"
+
+#GLOBALS
 
 def get_tfidf(indexdict, n):
     tfidf = defaultdict(list)
     errors = []
-    if DB_MODE:
-        dbconnector.build_connection()
     for term, value in indexdict.items():
         for pair in value:
             tf_idf = calculate_tfidf(pair[1], n / len(indexdict[term]))
             ranking = rank_important_words(tf_idf, pair[2])
-            tfidf[term].append((pair[0], float(round(ranking, 2, )), str(pair[2]), str(pair[3])))
-        try:
-            if not DB_MODE:
-                write_row_db(str(term), tfidf[term])
-            else:
-                dbconnector.insert_data(term, str(tfidf[term]))
-        except Exception as e:
-            errors.append( "Failed to write entry for Term: " + str(term) + "And Value" + str(value))
-            print (errors[-1])
-
+            tfidf[term].append((pair[0], float(round(ranking, 2, ))))
+    p = Pool()
+    p.map(write_row_db, [(key, val) for key, val in tfidf.items()])
     if DB_MODE:
-        # dbconnector.build_connection()
-        # dbconnector.insert_all_data(tfidf)
-        dbconnector.close_connection()
+        dbconnector.insert_all_data(db_name)
     return tfidf, errors
 
 
@@ -78,8 +71,8 @@ def get_bookkeeping(filename):
 
 def write_row_db(index_values):
     #   Temporary  write to Database
-    outfile = open("temporarydatabase.tsv", "a+", encoding='utf8')
-    writer = csv.writer(outfile, delimiter='\t',)
+    outfile = open(db_name, "a+", encoding='utf8')
+    writer = csv.writer(outfile, delimiter='|',)
     writer.writerow(index_values)
     outfile.close()
     return
@@ -102,7 +95,7 @@ def query_terms(*terms) -> str:
         return search_results
         dbconnector.close_connection()
     else:
-        # QUERY AGAINST FILE
-        print("Not Implemented Yet")
+        if file_index is None:
+
 
 
