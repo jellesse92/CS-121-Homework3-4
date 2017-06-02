@@ -15,6 +15,7 @@ db_name = "database.txt"
 #GLOBALS
 file_index = defaultdict(list)
 
+
 def get_tfidf(indexdict, n):
     tfidf = defaultdict(list)
     errors = []
@@ -23,10 +24,7 @@ def get_tfidf(indexdict, n):
             tf_idf = calculate_tfidf(pair[1], n / len(indexdict[term]))
             ranking = rank_important_words(tf_idf, pair[2])
             tfidf[term].append((pair[0], float(round(ranking, 2, ))))
-    p = Pool()
-    p.map(write_row_db, [(key.encode('utf-8'), val) for key, val in tfidf.items()])
-    if DB_MODE:
-        dbconnector.insert_all_data(db_name)
+
     return tfidf, errors
 
 
@@ -58,7 +56,7 @@ def rank_important_words(calculation, imp_list):
     if 'h2' in imp_list:
         additional_ranking += 1.7
     if additional_ranking > 0:
-        calculation = calculation * additional_ranking
+        calculation *= additional_ranking
     return calculation
 
 
@@ -78,6 +76,14 @@ def write_row_db(index_values):
     writer.writerow(index_values)
     outfile.close()
     return
+
+
+def print_to_database(tfidf):
+    p = Pool()
+    p.map(write_row_db, [(key.encode('utf-8'), val) for key, val in tfidf.items()])
+    if DB_MODE:
+        dbconnector.insert_all_data(db_name)
+
 
 
 def get_tokens(text):

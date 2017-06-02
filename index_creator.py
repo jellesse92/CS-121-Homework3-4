@@ -52,6 +52,7 @@ def create_index(main_dir="WEBPAGES_CLEAN"):
     # Get TFIDF And print any errors found while processing
     debug_log("Printing TF-IDF to files.", True)
     indexdict, errors = helperfiles.get_tfidf(indexdict, filecount)
+    helperfiles.print_to_database(indexdict)
     print_stats(errors)
     debug_log("Done", True)
     debug_log("Elapsed Time: " + str(time.time() - start_time), True)
@@ -115,7 +116,7 @@ def print_stats(errors):
     out.close()
 
 if __name__ == '__main__':
-    if not os.path.isfile("temporarydatabase.tsv"):
+    if not os.path.isfile(helperfiles.db_name):
         debug_log("Database File Does Not Exist. Creating.")
         create_index()
 
