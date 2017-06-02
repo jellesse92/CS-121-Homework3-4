@@ -1,5 +1,5 @@
 import mysql.connector
-
+import ast
 cnx = None
 cursor = None
 
@@ -16,7 +16,6 @@ def build_connection() -> 'mysql connection':
     cnx .commit()
 
 
-
 def close_connection() -> None:
     #Must ALWAYS close after running a query
     cnx.commit()
@@ -25,13 +24,15 @@ def close_connection() -> None:
 
 
 def insert_row(term, locations) -> bool:
+    build_connection()
     # receives data as:3
     # token, [(0//1, 1), (0//2, 1, b) ] etc
     data_obj = {'term': term, 'locations': locations}
     data_str = "INSERT INTO web_index (term, locations) VALUES (%(term)s, %(locations)s) ON DUPLICATE KEY UPDATE locations = %(locations)s"
     cursor.execute(data_str, data_obj)
-    cnx.commit()
-    return cursor.lastrowid is not None
+    ret = cursor.lastrowid is not None
+    close_connection()
+    return ret
 
 
 def insert_all_data(file_name) -> bool:
@@ -46,9 +47,12 @@ def insert_all_data(file_name) -> bool:
     return ret
 
 def query_data(term) -> list:
+    build_connection()
     data_str = "SELECT locations FROM web_index WHERE term = %s"
     cursor.execute(data_str, [term])
-    return cursor.fetchone()[0]
+    ret = ast.literal_eval(cursor.fetchone()[0])
+    close_connection()
+    return ret
 
 
 

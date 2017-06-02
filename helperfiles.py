@@ -12,6 +12,7 @@ DB_MODE = True
 db_name = "database.tsv"
 
 #GLOBALS
+file_index = defaultdict(list)
 
 def get_tfidf(indexdict, n):
     tfidf = defaultdict(list)
@@ -87,15 +88,23 @@ def get_tokens(text):
 
 
 def query_terms(*terms) -> str:
+    global file_index
+    search_results = defaultdict(list)
     if DB_MODE:
         dbconnector.build_connection()
-        search_results = defaultdict(list)
         for term in terms:
             search_results[term] = ast.literal_eval(dbconnector.query_data(term))
-        return search_results
         dbconnector.close_connection()
     else:
         if file_index is None:
+            infile = open(db_name, 'r', encoding='utf-8')
+            for line in infile.readlines():
+                data = line.split("|")
+                file_index[data[0]] = data[1]
+        for term in terms:
+            search_results[term] = file_index[term]
+    return search_results
+
 
 
 
