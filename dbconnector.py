@@ -48,7 +48,7 @@ def insert_all_data(file_name):
 
 def query_data(term):
     build_connection()
-    data_str = "SELECT locations FROM tempdb WHERE term = %s"
+    data_str = "SELECT locations FROM web_index WHERE term = %s"
     cursor.execute(data_str, [term])
     ret = ast.literal_eval(cursor.fetchone()[0])
     close_connection()
@@ -58,7 +58,7 @@ def query_data(term):
 def query_urls(docids):
     build_connection()
     # docidlist = something = ', '.join(["'" + str(d_id) + "'" for d_id in docids])
-    data_str = "select url from bookkeeping where docid = '" + docids + "';"
+    data_str = "SELECT url FROM bookkeeping WHERE docid = '" + docids + "';"
     cursor.execute(data_str)
     ret = cursor.fetchall()
     url = ret[0][0]
